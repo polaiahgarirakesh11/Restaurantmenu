@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Menu UI with Admin Close</title>
+<style>
+/* ---------- Base ---------- */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background-color: #f5f5f5;
+}
+
+header {
+  background-color: #ff7043;
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+header h1 {
+  margin: 0;
+}
+
+header p {
+  margin: 5px 0 0;
+  font-size: 14px;
+}
+
+.category-buttons {
+  text-align: center;
+  margin: 20px;
+}
+
+.category-buttons button {
+  padding: 10px 18px;
+  margin: 6px;
+  border: none;
+  border-radius: 20px;
+  background-color: #ff7043;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.category-buttons button:hover {
+  background-color: #e65c2f;
+}
+
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+.menu-item {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.menu-item:hover {
+  transform: translateY(-3px);
+}
+
+.menu-item h3 {
+  margin: 0;
+  color: #333;
+}
+
+.menu-item p {
+  font-size: 14px;
+  color: #666;
+  margin: 8px 0;
+}
+
+.menu-item span {
+  font-weight: bold;
+  color: #ff7043;
+  font-size: 16px;
+}
+
+.menu-item .delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 3px 6px;
+  font-size: 12px;
+  display: none;
+}
+
+.admin-panel {
+  display: none;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px;
+  max-width: 400px;
+  position: relative;
+}
+
+/* ---------- Admin Button ---------- */
+#adminBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #ff7043;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+#loginModal {
+  display: none;
+  position: fixed;
+  top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+}
+
+#loginModal .modal-content {
+  background:white;
+  padding:20px;
+  border-radius:8px;
+  width:300px;
+  text-align:center;
+  position: relative;
+}
+
+/* Close Button */
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ff7043;
+}
+
+/* Inputs & Buttons */
+#loginModal input, .admin-panel input, .admin-panel select {
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+  box-sizing:border-box;
+}
+
+#loginModal button, .admin-panel button {
+  padding:8px 12px;
+  margin-top:10px;
+  background:#ff7043;
+  color:white;
+  border:none;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+/* ---------- Mobile View ---------- */
+@media (max-width: 768px) {
+  header { padding: 15px; }
+  header h1 { font-size: 22px; }
+  header p { font-size: 13px; }
+  .category-buttons { margin: 10px; }
+  .category-buttons button { width: 45%; padding: 10px; font-size: 13px; }
+  .menu { grid-template-columns: 1fr; padding: 15px; }
+  .menu-item h3 { font-size: 16px; }
+  .menu-item p { font-size: 13px; }
+  .menu-item span { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍽️ Restaurant Menu</h1>
+  <p>Food Items</p>
+</header>
+
+<!-- Admin Button -->
+<button id="adminBtn" onclick="showLogin()">🛡️</button>
+
+<div class="category-buttons">
+  <button onclick="filterMenu('all')">All</button>
+  <button onclick="filterMenu('starters')">Starters</button>
+  <button onclick="filterMenu('main')">Main Course</button>
+  <button onclick="filterMenu('dessert')">Desserts</button>
+</div>
+
+<section class="menu" id="menuSection">
+  <!-- Menu items will render here -->
+</section>
+
+<!-- Login Modal -->
+<div id="loginModal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeLogin()">×</span>
+    <h3>Admin Login</h3>
+    <input type="email" id="adminEmail" placeholder="Email">
+    <input type="password" id="adminPass" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+</div>
+
+<div class="admin-panel" id="adminPanel">
+  <span class="close-btn" onclick="closeAdmin()">×</span>
+  <h3>Admin Panel</h3>
+  <input type="text" id="itemName" placeholder="Item Name">
+  <input type="text" id="itemDesc" placeholder="Description">
+  <input type="text" id="itemPrice" placeholder="Price">
+  <select id="itemCategory">
+    <option value="starters">Starters</option>
+    <option value="main">Main Course</option>
+    <option value="dessert">Desserts</option>
+  </select>
+  <button onclick="addItem()">Add Menu Item</button>
+</div>
+
+<script>
+const adminEmail = "rakeshreddy@gmail.com";
+const adminPass = "r@kesh123";
+
+let menuItems = [
+  {name:"Veg Soup", desc:"Hot and healthy vegetable soup", price:"120", category:"starters"},
+  {name:"Paneer Tikka", desc:"Grilled paneer with Indian spices", price:"180", category:"starters"},
+  {name:"Veg Biryani", desc:"Flavorful rice with mixed vegetables", price:"220", category:"main"},
+  {name:"Chilly Baby Corn", desc:"Crispy baby corn tossed in spicy Indo-Chinese sauce", price:"100", category:"starters"},
+  {name:"Gobi Manchurian", desc:"Crispy cauliflower tossed in chili-garlic sauce", price:"160", category:"main"},
+  {name:"Mushroom 65", desc:"Deep-fried spicy mushroom bites", price:"130", category:"starters"},
+  {name:"Chilli Paneer", desc:"Spicy and tangy stir-fried paneer", price:"190", category:"main"},
+  {name:"Butter Naan & Paneer Butter Masala", desc:"Classic North Indian combo", price:"260", category:"main"},
+  {name:"Gulab Jamun", desc:"Soft milk dumplings in sugar syrup", price:"90", category:"dessert"},
+];
+
+// Render menu
+function renderMenu() {
+  const menuSection = document.getElementById('menuSection');
+  menuSection.innerHTML = "";
+  menuItems.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = `menu-item ${item.category}`;
+    div.innerHTML = `<h3>${item.name}</h3><p>${item.desc}</p><span>₹${item.price}</span>`;
+    if(document.getElementById('adminPanel').style.display === 'block') {
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.innerText = 'Delete';
+      delBtn.style.display = 'block';
+      delBtn.onclick = () => deleteItem(index);
+      div.appendChild(delBtn);
+    }
+    menuSection.appendChild(div);
+  });
+}
+
+// Filter menu
+function filterMenu(category) {
+  const items = document.querySelectorAll('.menu-item');
+  items.forEach(item => {
+    item.style.display =
+      category === 'all' || item.classList.contains(category)
+      ? 'block'
+      : 'none';
+  });
+}
+
+// Show login modal
+function showLogin() {
+  document.getElementById('loginModal').style.display = 'flex';
+}
+
+// Close login modal
+function closeLogin() {
+  document.getElementById('loginModal').style.display = 'none';
+}
+
+// Admin login
+function login() {
+  const email = document.getElementById('adminEmail').value;
+  const pass = document.getElementById('adminPass').value;
+  if(email === adminEmail && pass === adminPass) {
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('loginModal').style.display = 'none';
+    renderMenu();
+    alert('Admin login successful!');
+  } else {
+    alert('Invalid credentials!');
+  }
+}
+
+// Close admin panel
+function closeAdmin() {
+  document.getElementById('adminPanel').style.display = 'none';
+  renderMenu();
+}
+
+// Add item
+function addItem() {
+  const name = document.getElementById('itemName').value;
+  const desc = document.getElementById('itemDesc').value;
+  const price = document.getElementById('itemPrice').value;
+  const category = document.getElementById('itemCategory').value;
+  if(name && desc && price) {
+    menuItems.push({name, desc, price, category});
+    renderMenu();
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemDesc').value = '';
+    document.getElementById('itemPrice').value = '';
+  } else {
+    alert('Please fill all fields');
+  }
+}
+
+// Delete item
+function deleteItem(index) {
+  if(confirm('Are you sure you want to delete this item?')) {
+    menuItems.splice(index,1);
+    renderMenu();
+  }
+}
+
+// Initial render
+renderMenu();
+</script>
+
+</body>
+</html>
